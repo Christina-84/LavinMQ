@@ -405,7 +405,7 @@ module AvalancheMQ
     end
 
     def details_tuple
-      {
+      details = {
         name: @name, durable: @durable, exclusive: @exclusive,
         auto_delete: @auto_delete, arguments: @arguments,
         consumers: @consumers.size, vhost: @vhost.name,
@@ -421,6 +421,13 @@ module AvalancheMQ
         message_stats: stats_details,
         internal: @internal,
       }
+      return details if @ready.size.zero?
+      first_message = read(@ready.first?.not_nil!).message
+      last_message = read(@ready.last?.not_nil!).message
+      details.merge({
+        first_message_timestamp: first_message.timestamp,
+        last_message_timestamp: last_message.timestamp
+      })
     end
 
     class RejectOverFlow < Exception; end
